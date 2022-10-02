@@ -1,12 +1,17 @@
 package com.example.myfirstapp;
 
+import android.app.DatePickerDialog;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.widget.*;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -16,8 +21,10 @@ public class MainActivity extends AppCompatActivity {
     private RadioGroup radioGroup;
     private RadioButton radioButton;
     private TextView date;
+    private DatePickerDialog.OnDateSetListener setListener;
     private CheckBox mJavaCheck, mJsCheck, mPythonCheck, mCppCheck, mCsharpCheck, mGoCheck;
     private ArrayList<String> mResult;
+    private int checkCounter = 0;
     private Button clearButton, sendButton;
 
     @Override
@@ -45,6 +52,28 @@ public class MainActivity extends AppCompatActivity {
         });*/
 
         date = findViewById(R.id.editTextDate);
+        Calendar calendar = Calendar.getInstance();
+        final int year = calendar.get(Calendar.YEAR);
+        final int month = calendar.get(Calendar.MONTH);
+        final int day = calendar.get(Calendar.DAY_OF_MONTH);
+        date.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DatePickerDialog datePickerDialog = new DatePickerDialog(
+                        MainActivity.this, android.R.style.Theme_Holo_Light_Dialog_MinWidth, setListener,year,month,day);
+                datePickerDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                datePickerDialog.show();
+            }
+        });
+
+        setListener = new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                month = month+1;
+                String date_str = day + "/" + month + "/" + year;
+                date.setText(date_str);
+            }
+        };
 
         radioGroup = findViewById(R.id.radio_group);
         radioButton = findViewById(R.id.radioButton);
@@ -63,60 +92,85 @@ public class MainActivity extends AppCompatActivity {
         mJavaCheck.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mJavaCheck.isChecked())
+                if(mJavaCheck.isChecked()){
                     mResult.add("Java");
-                else
+                    checkCounter++;
+                }
+                else{
                     mResult.remove("Java");
+                    checkCounter--;
+
+                }
             }
         });
 
         mJsCheck.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mJsCheck.isChecked())
+                if(mJsCheck.isChecked()) {
                     mResult.add("Javascript");
-                else
+                    checkCounter++;
+                }
+                else {
                     mResult.remove("Javascript");
+                    checkCounter--;
+                }
             }
         });
 
         mPythonCheck.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mPythonCheck.isChecked())
+                if(mPythonCheck.isChecked()) {
                     mResult.add("Python");
-                else
+                    checkCounter++;
+                }
+                else {
                     mResult.remove("Python");
+                    checkCounter--;
+                }
             }
         });
 
         mCppCheck.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mCppCheck.isChecked())
+                if(mCppCheck.isChecked()) {
                     mResult.add("C/C++");
-                else
+                    checkCounter++;
+                }
+                else {
+                    checkCounter--;
                     mResult.remove("C/C++");
+                }
             }
         });
 
         mCsharpCheck.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mCsharpCheck.isChecked())
+                if(mCsharpCheck.isChecked()) {
                     mResult.add("C#");
-                else
+                    checkCounter++;
+                }
+                else {
                     mResult.remove("C#");
+                    checkCounter--;
+                }
             }
         });
 
         mGoCheck.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mGoCheck.isChecked())
+                if(mGoCheck.isChecked()) {
                     mResult.add("Golang");
-                else
+                    checkCounter++;
+                }
+                else {
+                    checkCounter--;
                     mResult.remove("Golang");
+                }
             }
         });
     }
@@ -125,6 +179,12 @@ public class MainActivity extends AppCompatActivity {
     //Called when the user taps the Send button
     public void submitForm(View view) {
         Intent intent = new Intent(this, DisplayMessageActivity.class);
+        if (nameEdit.getText().toString().matches("") ||
+                lastNameEdit.getText().toString().matches("")||
+                date.getText().toString().matches("")){
+            Toast.makeText(this, "Hay parametros que necesitan ser llenados", Toast.LENGTH_SHORT).show();
+            return;
+        }
         //nameEdit = (EditText) findViewById(R.id.editText);
         //EditText editText2 = (EditText) findViewById(R.id.editText2);
 
@@ -141,10 +201,20 @@ public class MainActivity extends AppCompatActivity {
 
         String message3;
         if (radioGroup.getCheckedRadioButtonId() == R.id.radioButton){
-            message3 = "Me gusta programar. Mis lenguajes favoritos son: ";
-        }else
-            message3 = "No me gusta programar.";
-
+            if (checkCounter > 0)
+                message3 = "Me gusta programar. Mis lenguajes favoritos son: ";
+            else{
+                Toast.makeText(this, "Debe seleccionar al menos 1 lenguaje", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }else {
+            if (checkCounter == 0)
+                message3 = "No me gusta programar.";
+            else{
+                Toast.makeText(this, "No deberia haber ningun lenguaje seleccionado", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
         intent.putExtra("com.example.myfirstapp.MESSAGE2", message2);
         intent.putExtra("com.example.myfirstapp.MESSAGE3", message3);
         startActivity(intent);
@@ -156,7 +226,6 @@ public class MainActivity extends AppCompatActivity {
         date.setText("");
         spinner.setSelection(0);
         radioGroup.clearCheck();
-
         mJavaCheck.setChecked(false);
         mCppCheck.setChecked(false);
         mCsharpCheck.setChecked(false);
