@@ -8,10 +8,42 @@
         tools:context=".DisplayMessageActivity">
 
     <TextView
-            android:text="TextView"
+            android:text="STORAGE"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" android:id="@+id/textView"
+            app:layout_constraintEnd_toEndOf="parent" android:id="@+id/storageText"
             app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="16dp"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large" android:textColor="#4CAF50"/>
+            android:textAppearance="@style/TextAppearance.AppCompat.Large" android:textColor="#AF4C4C"/>
+    <TextView
+            android:text="LOCATION"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" android:id="@+id/locationText"
+            app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="68dp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large" android:textColor="#AF4C4C"
+            app:layout_constraintHorizontal_bias="0.501"/>
+    <TextView
+            android:text="CAMERA"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" android:id="@+id/cameraText"
+            app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="132dp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large" android:textColor="#AF4C4C"
+            app:layout_constraintHorizontal_bias="0.503"/>
+    <TextView
+            android:text="PHONE"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" android:id="@+id/phoneText"
+            app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="188dp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large" android:textColor="#AF4C4C"
+    />
+    <TextView
+            android:text="CONTACTS"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" android:id="@+id/contactText"
+            app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="248dp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large" android:textColor="#AF4C4C"
+            app:layout_constraintHorizontal_bias="0.502"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
