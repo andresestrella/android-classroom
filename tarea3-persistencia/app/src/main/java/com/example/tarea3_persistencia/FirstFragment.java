@@ -54,7 +54,8 @@ public class FirstFragment extends Fragment {
     }
 
     private void setProductInfo() throws URISyntaxException {
-        String uri = "https://www.funkykit.com/wp-content/uploads/2017/01/Titan-X.jpg";
+        //String uri = "https://www.funkykit.com/wp-content/uploads/2017/01/Titan-X.jpg";
+        String uri = "gs://te-practica3.appspot.com/16177568_10211360956249913_3417240120267809241_o.jpg";
         products.add(new Product("001","GTX3080",uri, (float)99.99,"Nvidia"));
     }
 

@@ -9,7 +9,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
-import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.tarea3_persistencia.Models.Product;
@@ -24,7 +23,6 @@ public class recyclerAdapter extends RecyclerView.Adapter<recyclerAdapter.MyView
     public recyclerAdapter(ArrayList<Product> products){
         this.products = products;
     }
-    private NavController navController;
 
     public class MyViewHolder extends RecyclerView.ViewHolder{
         private ImageView img;
@@ -50,7 +48,6 @@ public class recyclerAdapter extends RecyclerView.Adapter<recyclerAdapter.MyView
     @Override
     public recyclerAdapter.MyViewHolder onCreateViewHolder(@NonNull @NotNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.single_item_view, parent, false);
-        navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return new MyViewHolder(itemView);
     }
 

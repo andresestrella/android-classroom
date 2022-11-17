@@ -20,7 +20,6 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
-import androidx.navigation.fragment.NavHostFragment;
 import com.example.tarea3_persistencia.Models.Product;
 import com.example.tarea3_persistencia.databinding.FragmentSecondBinding;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -49,6 +48,7 @@ public class SecondFragment extends Fragment {
     private ProgressBar progressBar;
     private Uri imageUri;
     private StorageReference storageReference;
+    private String result;
 
     ActivityResultLauncher<String> mGetContent = registerForActivityResult(new
                     ActivityResultContracts.GetContent(),
@@ -68,6 +68,7 @@ public class SecondFragment extends Fragment {
         binding = FragmentSecondBinding.inflate(inflater, container, false);
 
         storageReference = FirebaseStorage.getInstance().getReference("uploads");
+
 
         return binding.getRoot();
     }
@@ -90,10 +91,10 @@ public class SecondFragment extends Fragment {
             //find product in the database with the id
             Product product;
             //set the views with the info.
-            nameEdit.setText(product.getName());
+            /*nameEdit.setText(product.getName());
             brandEdit.setText(product.getBrand());
             priceEdit.setText(String.valueOf(product.getPrice()));
-            Picasso.get().load(product.getImageUrl()).into(imgView);
+            Picasso.get().load(product.getImageUrl()).into(imgView);*/
         }
 
         imgView.setOnClickListener(new View.OnClickListener() {
@@ -113,11 +114,14 @@ public class SecondFragment extends Fragment {
                 priceEdit.getText().toString().length() == 0){
                     String newId = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
                     //upload iamge and get url
-                    String imgUrl = ;
                     uploadFile();
                     //create Product object
-                    Product prod = new Product(newId, nameEdit.getText().toString(), brandEdit.getText().toString(), Float.parseFloat(priceEdit.getText().toString()), imgUrl);
-                    //save to database
+                    if (result != null && !result.equals("")){
+                        Product prod = new Product(newId, nameEdit.getText().toString(), brandEdit.getText().toString(), Float.parseFloat(priceEdit.getText().toString()), result);
+                        //save to database
+
+                    }
+
 
                 }
 
@@ -162,6 +166,7 @@ public class SecondFragment extends Fragment {
         return mime.getExtensionFromMimeType(cr.getType(uri));
     }
     private void uploadFile() {
+
         if(imageUri != null){
             StorageReference fileRefence = storageReference.child(System.currentTimeMillis() + "." + getFileExtension(imageUri));
             fileRefence.putFile(imageUri)
@@ -177,8 +182,8 @@ public class SecondFragment extends Fragment {
                             }, 3000);
 
                             Toast.makeText(getContext(), "Upload successful", Toast.LENGTH_SHORT).show();
-                            taskSnapshot.getStorage().getDownloadUrl().toString();
-                            taskSnapshot.getMetadata().getReference().getDownloadUrl().toString();
+                            result = taskSnapshot.getStorage().getDownloadUrl().toString();
+                            //taskSnapshot.getMetadata().getReference().getDownloadUrl().toString();
 
                         }
                     })
@@ -186,6 +191,7 @@ public class SecondFragment extends Fragment {
                         @Override
                         public void onFailure(@NonNull @NotNull Exception e) {
                             Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                            result = null;
                         }
                     })
                     .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
