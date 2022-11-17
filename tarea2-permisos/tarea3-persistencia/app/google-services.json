@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "169880884949",
+    "project_id": "te-practica3",
+    "storage_bucket": "te-practica3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:169880884949:android:106393fe86d462a6b4345c",
+        "android_client_info": {
+          "package_name": "com.example.tarea3_persistencia"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "169880884949-rh7p5ilj7i6to445sjdvkv08crbmkktj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9BJiROiLKG9MB2TMfZaMLEV0scMGV84k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "169880884949-rh7p5ilj7i6to445sjdvkv08crbmkktj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

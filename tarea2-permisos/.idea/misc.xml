@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/WorkSpaces/PUCMM/Temas Especiales/TemasEspeciales-Android/tarea2-permisos/app/src/main/res/layout/activity_display_message.xml" value="0.22282608695652173" />
+        <entry key="..\:/WorkSpaces/PUCMM/Temas Especiales/TemasEspeciales-Android/tarea2-permisos/app/src/main/res/layout/activity_main.xml" value="0.19739583333333333" />
+        <entry key="..\:/WorkSpaces/PUCMM/Temas Especiales/TemasEspeciales-Android/tarea2-permisos/app/src/main/res/layout/content_main.xml" value="0.22282608695652173" />
+      </map>
+    </option>
+  </component>
   <component name="FrameworkDetectionExcludesConfiguration">
     <file type="web" url="file://$PROJECT_DIR$" />
   </component>
