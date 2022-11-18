@@ -10,15 +10,11 @@ import androidx.navigation.ui.NavigationUI;
 import com.example.tarea3_persistencia.databinding.ActivityMainBinding;
 import android.view.Menu;
 import android.view.MenuItem;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
-    private StorageReference storageReference;
-    //private DatabaseReference databaseReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        storageReference = FirebaseStorage.getInstance().getReference("uploads");
     }
 
     @Override

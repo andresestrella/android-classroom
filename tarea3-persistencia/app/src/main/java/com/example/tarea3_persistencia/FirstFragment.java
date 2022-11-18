@@ -7,14 +7,14 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.tarea3_persistencia.Models.Product;
 import com.example.tarea3_persistencia.databinding.FragmentFirstBinding;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.example.tarea3_persistencia.db.AppDatabase;
+import com.example.tarea3_persistencia.db.ProductViewModel;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
@@ -22,7 +22,8 @@ public class FirstFragment extends Fragment {
 
     private FragmentFirstBinding binding;
     private RecyclerView rv;
-    private ArrayList<Product> products;
+    private ArrayList<AppDatabase.Product> products = new ArrayList<>();
+    private recyclerAdapter adapter;
 
 
     @Override
@@ -33,39 +34,26 @@ public class FirstFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        ProductViewModel mProductViewModel = new ViewModelProvider(this).get(ProductViewModel.class);
 
-        rv = view.findViewById(R.id.rv);
+//        String uri = "gs://te-practica3.appspot.com/16177568_10211360956249913_3417240120267809241_o.jpg";
+//        mProductViewModel.insert(new AppDatabase.Product("GTX3080","Nvidia", (float)99.99, uri));
+        //products = (ArrayList<Product>) mProductViewModel.findAll().getValue();
 
-        products = new ArrayList<>();
-        try {
-            setProductInfo();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+        adapter = new recyclerAdapter();
+        mProductViewModel.findAll().observe(getViewLifecycleOwner(), products ->{
+            adapter.setList(products);
+        });
 
-        setAdapter();
-        /*binding.buttonFirst.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                NavHostFragment.findNavController(FirstFragment.this)
-                        .navigate(R.id.action_FirstFragment_to_SecondFragment);
-            }
-        });*/
-    }
-
-    private void setProductInfo() throws URISyntaxException {
-        //String uri = "https://www.funkykit.com/wp-content/uploads/2017/01/Titan-X.jpg";
-        String uri = "gs://te-practica3.appspot.com/16177568_10211360956249913_3417240120267809241_o.jpg";
-        products.add(new Product("001","GTX3080",uri, (float)99.99,"Nvidia"));
-    }
-
-    private void setAdapter(){
-        recyclerAdapter adapter = new recyclerAdapter(products);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext());
-        //RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity().getContext());
-        rv.setLayoutManager(layoutManager);
+        rv = binding.rv;
+        rv.setHasFixedSize(true);
+        rv.setLayoutManager(new LinearLayoutManager(getContext()));
         rv.setItemAnimator(new DefaultItemAnimator());
         rv.setAdapter(adapter);
+
+        //run this once
+
+
     }
 
     @Override

@@ -9,7 +9,6 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import android.webkit.MimeTypeMap;
 import android.widget.*;
 import androidx.activity.result.ActivityResultCallback;
@@ -19,20 +18,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
-import com.example.tarea3_persistencia.Models.Product;
 import com.example.tarea3_persistencia.databinding.FragmentSecondBinding;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
+import com.example.tarea3_persistencia.db.AppDatabase;
+import com.example.tarea3_persistencia.db.ProductViewModel;
+import com.google.android.gms.tasks.*;
+import com.google.firebase.storage.*;
 import com.squareup.picasso.Picasso;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.UUID;
-
 import static android.app.Activity.RESULT_OK;
 
 public class SecondFragment extends Fragment {
@@ -42,13 +36,15 @@ public class SecondFragment extends Fragment {
     private EditText nameEdit;
     private EditText brandEdit;
     private EditText priceEdit;
-    private Button saveBtn;
-    private Button clearBtn;
     private Button deleteBtn;
     private ProgressBar progressBar;
     private Uri imageUri;
     private StorageReference storageReference;
+    private StorageTask mUploadTask;
     private String result;
+    private AppDatabase.Product product;
+    private String prodId;
+    private ProductViewModel mProductViewModel;
 
     ActivityResultLauncher<String> mGetContent = registerForActivityResult(new
                     ActivityResultContracts.GetContent(),
@@ -66,10 +62,7 @@ public class SecondFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState
     ) {
         binding = FragmentSecondBinding.inflate(inflater, container, false);
-
         storageReference = FirebaseStorage.getInstance().getReference("uploads");
-
-
         return binding.getRoot();
     }
 
@@ -80,51 +73,47 @@ public class SecondFragment extends Fragment {
         nameEdit = view.findViewById(R.id.nameEditText);
         brandEdit = view.findViewById(R.id.brandEditText);
         priceEdit = view.findViewById(R.id.priceEditText);
-        saveBtn = view.findViewById(R.id.saveButton);
-        clearBtn = view.findViewById(R.id.clearButton);
+        Button saveBtn = view.findViewById(R.id.saveButton);
+        Button clearBtn = view.findViewById(R.id.clearButton);
         deleteBtn = view.findViewById(R.id.deleteButton);
         progressBar = view.findViewById(R.id.progress_bar);
+        mProductViewModel = new ViewModelProvider(this).get(ProductViewModel.class);
 
-        String prodId = getArguments().getString("productId");
-        if (prodId != null){
+        prodId = getArguments().getString("productId");
+        if (prodId != null && !prodId.equals("0")){
             deleteBtn.setVisibility(View.VISIBLE);
             //find product in the database with the id
-            Product product;
-            //set the views with the info.
-            /*nameEdit.setText(product.getName());
-            brandEdit.setText(product.getBrand());
-            priceEdit.setText(String.valueOf(product.getPrice()));
-            Picasso.get().load(product.getImageUrl()).into(imgView);*/
+            product = mProductViewModel.getEntity(prodId).getValue();
+
+            mProductViewModel.getEntity(prodId).observe(getViewLifecycleOwner(), prod ->{
+                product = prod;
+                //set the views with the info.
+                nameEdit.setText(product.getName());
+                brandEdit.setText(product.getBrand());
+                priceEdit.setText(String.valueOf(product.getPrice()));
+                Picasso.get().load(product.getImageUrl()).into(imgView);
+            });
+
+
         }
 
-        imgView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //openFileChooser();
-                mGetContent.launch("image/*");
-            }
+        imgView.setOnClickListener(v -> {
+            //openFileChooser();
+            mGetContent.launch("image/*");
         });
 
-        saveBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //check que no hay parametros vacios
-                if(nameEdit.getText().toString().length() == 0 ||
-                brandEdit.getText().toString().length() == 0 ||
-                priceEdit.getText().toString().length() == 0){
-                    String newId = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
-                    //upload iamge and get url
+        saveBtn.setOnClickListener(v -> {
+            //check que no hay parametros vacios
+            String price = priceEdit.getText().toString().trim();
+            if(nameEdit.getText().toString().length() == 0 || brandEdit.getText().toString().length() == 0 || price.length() == 0){
+                Toast.makeText(getContext(), "There are empty fields", Toast.LENGTH_SHORT).show();
+            }else{
+                //upload image and get url
+                if (mUploadTask != null && mUploadTask.isInProgress()){
+                    Toast.makeText(getContext(), "Upload in progress", Toast.LENGTH_SHORT).show();
+                }else{
                     uploadFile();
-                    //create Product object
-                    if (result != null && !result.equals("")){
-                        Product prod = new Product(newId, nameEdit.getText().toString(), brandEdit.getText().toString(), Float.parseFloat(priceEdit.getText().toString()), result);
-                        //save to database
-
-                    }
-
-
                 }
-
             }
         });
 
@@ -143,21 +132,12 @@ public class SecondFragment extends Fragment {
         deleteBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //delete from database with prodId
-                //prodId
-                //send to fragment 1
+                //mProductViewModel.delete(mProductViewModel.getEntity(prodId).getValue());
+                mProductViewModel.delete(product);
                 Navigation.findNavController(v).navigate(R.id.action_SecondFragment_to_FirstFragment);
             }
         });
 
-
-        /*binding.buttonSecond.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                NavHostFragment.findNavController(SecondFragment.this)
-                        .navigate(R.id.action_SecondFragment_to_FirstFragment);
-            }
-        });*/
     }
 
     private String getFileExtension(Uri uri){
@@ -168,8 +148,9 @@ public class SecondFragment extends Fragment {
     private void uploadFile() {
 
         if(imageUri != null){
-            StorageReference fileRefence = storageReference.child(System.currentTimeMillis() + "." + getFileExtension(imageUri));
-            fileRefence.putFile(imageUri)
+            StorageReference fileReference = storageReference.child(System.currentTimeMillis() + "." + getFileExtension(imageUri));
+
+            mUploadTask = fileReference.putFile(imageUri)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -179,12 +160,9 @@ public class SecondFragment extends Fragment {
                                 public void run() {
                                     progressBar.setProgress(0);
                                 }
-                            }, 3000);
+                            }, 500);
 
                             Toast.makeText(getContext(), "Upload successful", Toast.LENGTH_SHORT).show();
-                            result = taskSnapshot.getStorage().getDownloadUrl().toString();
-                            //taskSnapshot.getMetadata().getReference().getDownloadUrl().toString();
-
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
@@ -201,6 +179,46 @@ public class SecondFragment extends Fragment {
                             progressBar.setProgress((int)progress);
                         }
                     });
+
+            Task<Uri> urlTask = mUploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                @Override
+                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                    if (!task.isSuccessful()) {
+                        throw task.getException();
+                    }
+                    // Continue with the task to get the download URL
+                    return fileReference.getDownloadUrl();
+                }
+            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                @Override
+                public void onComplete(@NonNull Task<Uri> task) {
+                    if (task.isSuccessful()) {
+                        Uri downloadUri = task.getResult();
+                        result = downloadUri.toString();
+                        System.out.println(result);
+                        if (prodId != null && !prodId.equals("0")){
+                            product.setName(nameEdit.getText().toString());
+                            product.setBrand(brandEdit.getText().toString());
+                            product.setPrice(Float.parseFloat(priceEdit.getText().toString()));
+                            product.setImageUrl(result);
+                            mProductViewModel.update(product);
+                            Toast.makeText(getContext(), "Product Updates", Toast.LENGTH_SHORT).show();
+                            Navigation.findNavController(getView()).navigate(R.id.action_SecondFragment_to_FirstFragment);
+                        }else{
+                            //create Product object
+                            AppDatabase.Product prod = new AppDatabase.Product(nameEdit.getText().toString(), brandEdit.getText().toString(), Float.parseFloat(priceEdit.getText().toString()), result);
+                            //save to database
+                            mProductViewModel.insert(prod);
+                            Toast.makeText(getContext(), "Product Saved", Toast.LENGTH_SHORT).show();
+                            Navigation.findNavController(getView()).navigate(R.id.action_SecondFragment_to_FirstFragment);
+                        }
+                    } else {
+                        // Handle failures
+                        Toast.makeText(getContext(), "No se pudo guardar imagen", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+
         }else{
             Toast.makeText(getActivity(), "No file selected", Toast.LENGTH_SHORT).show();
         }
