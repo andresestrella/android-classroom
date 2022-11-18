@@ -45,6 +45,7 @@ public class SecondFragment extends Fragment {
     private AppDatabase.Product product;
     private String prodId;
     private ProductViewModel mProductViewModel;
+    private boolean imgChanged = false;
 
     ActivityResultLauncher<String> mGetContent = registerForActivityResult(new
                     ActivityResultContracts.GetContent(),
@@ -54,6 +55,7 @@ public class SecondFragment extends Fragment {
                     // Handle the returned Uri
                     Picasso.get().load(uri).into(imgView);
                     imageUri = uri;
+                    imgChanged = true;
                 }
             });
 
@@ -91,6 +93,8 @@ public class SecondFragment extends Fragment {
                 nameEdit.setText(product.getName());
                 brandEdit.setText(product.getBrand());
                 priceEdit.setText(String.valueOf(product.getPrice()));
+                imageUri = Uri.parse(product.getImageUrl());
+                imgChanged = false;
                 Picasso.get().load(product.getImageUrl()).into(imgView);
             });
 
@@ -149,81 +153,88 @@ public class SecondFragment extends Fragment {
 
         if(imageUri != null){
             StorageReference fileReference = storageReference.child(System.currentTimeMillis() + "." + getFileExtension(imageUri));
+            if (!imgChanged){
+                save();
+            }else{
+                mUploadTask = fileReference.putFile(imageUri)
+                        .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                //delays 3 seconds until setting the progress bar to 0.
+                                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        progressBar.setProgress(0);
+                                    }
+                                }, 500);
 
-            mUploadTask = fileReference.putFile(imageUri)
-                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            //delays 3 seconds until setting the progress bar to 0.
-                            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    progressBar.setProgress(0);
-                                }
-                            }, 500);
+                                Toast.makeText(getContext(), "Upload successful", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull @NotNull Exception e) {
+                                Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                                result = null;
+                            }
+                        })
+                        .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onProgress(@NonNull @NotNull UploadTask.TaskSnapshot snapshot) {
+                                double progress = (100.0 * snapshot.getBytesTransferred() / snapshot.getTotalByteCount());
+                                progressBar.setProgress((int)progress);
+                            }
+                        });
 
-                            Toast.makeText(getContext(), "Upload successful", Toast.LENGTH_SHORT).show();
+                Task<Uri> urlTask = mUploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                    @Override
+                    public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                        if (!task.isSuccessful()) {
+                            throw task.getException();
                         }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull @NotNull Exception e) {
-                            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                            result = null;
-                        }
-                    })
-                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onProgress(@NonNull @NotNull UploadTask.TaskSnapshot snapshot) {
-                            double progress = (100.0 * snapshot.getBytesTransferred() / snapshot.getTotalByteCount());
-                            progressBar.setProgress((int)progress);
-                        }
-                    });
-
-            Task<Uri> urlTask = mUploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-                @Override
-                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                    if (!task.isSuccessful()) {
-                        throw task.getException();
+                        // Continue with the task to get the download URL
+                        return fileReference.getDownloadUrl();
                     }
-                    // Continue with the task to get the download URL
-                    return fileReference.getDownloadUrl();
-                }
-            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-                @Override
-                public void onComplete(@NonNull Task<Uri> task) {
-                    if (task.isSuccessful()) {
-                        Uri downloadUri = task.getResult();
-                        result = downloadUri.toString();
-                        System.out.println(result);
-                        if (prodId != null && !prodId.equals("0")){
-                            product.setName(nameEdit.getText().toString());
-                            product.setBrand(brandEdit.getText().toString());
-                            product.setPrice(Float.parseFloat(priceEdit.getText().toString()));
-                            product.setImageUrl(result);
-                            mProductViewModel.update(product);
-                            Toast.makeText(getContext(), "Product Updates", Toast.LENGTH_SHORT).show();
-                            Navigation.findNavController(getView()).navigate(R.id.action_SecondFragment_to_FirstFragment);
-                        }else{
-                            //create Product object
-                            AppDatabase.Product prod = new AppDatabase.Product(nameEdit.getText().toString(), brandEdit.getText().toString(), Float.parseFloat(priceEdit.getText().toString()), result);
-                            //save to database
-                            mProductViewModel.insert(prod);
-                            Toast.makeText(getContext(), "Product Saved", Toast.LENGTH_SHORT).show();
-                            Navigation.findNavController(getView()).navigate(R.id.action_SecondFragment_to_FirstFragment);
+                }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Uri> task) {
+                        if (task.isSuccessful()) {
+                            Uri downloadUri = task.getResult();
+                            result = downloadUri.toString();
+                            save();
+                        } else {
+                            // Handle failures
+                            Toast.makeText(getContext(), "No se pudo guardar imagen", Toast.LENGTH_SHORT).show();
                         }
-                    } else {
-                        // Handle failures
-                        Toast.makeText(getContext(), "No se pudo guardar imagen", Toast.LENGTH_SHORT).show();
                     }
-                }
-            });
+                });
+            }
 
         }else{
             Toast.makeText(getActivity(), "No file selected", Toast.LENGTH_SHORT).show();
         }
     }
 
+    private void save(){
+        if (prodId != null && !prodId.equals("0")){
+            product.setName(nameEdit.getText().toString());
+            product.setBrand(brandEdit.getText().toString());
+            product.setPrice(Float.parseFloat(priceEdit.getText().toString()));
+            if (imgChanged) {
+                product.setImageUrl(result);
+            }
+            mProductViewModel.update(product);
+            Toast.makeText(getContext(), "Product Updated", Toast.LENGTH_SHORT).show();
+            Navigation.findNavController(getView()).navigate(R.id.action_SecondFragment_to_FirstFragment);
+        }else{
+            //create Product object
+            AppDatabase.Product prod = new AppDatabase.Product(nameEdit.getText().toString(), brandEdit.getText().toString(), Float.parseFloat(priceEdit.getText().toString()), result);
+            //save to database
+            mProductViewModel.insert(prod);
+            Toast.makeText(getContext(), "Product Saved", Toast.LENGTH_SHORT).show();
+            Navigation.findNavController(getView()).navigate(R.id.action_SecondFragment_to_FirstFragment);
+        }
+    }
     private void openFileChooser(){
         Intent i = new Intent();
         i.setType("image/*");
